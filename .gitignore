@@ -1,2 +1,5 @@
 *.zip
 *.pdf
+__pycache__/
+.gitignore
+
