@@ -16,67 +16,55 @@ from drift_diffusion_simul import drift_diffusion_simulation
 
 ### You can define your own functions or constants here ... if you want.
 
-tcue = []
-tzone = []
-p = []
 
 def model(x, c1, c2, c3, c4):
-    sigma1 = c2 * p
-    sigma2 = c3 + (1 / (np.exp(c4 * tcue) - 1))
-    mu = c1 * tzone
-    sigma = ((sigma1 ** 2) * (sigma2 ** 2))/((sigma1 ** 2) + (sigma2 ** 2))
-    result = (1 / (np.sqrt(2 * np.pi * sigma))) * np.exp(-(x - mu) ** 2 / (2 * sigma))
-    return np.nan_to_num(result, np.float16)
-
+    x = np.array(x) / 1000
+    sigma1 = c2 * x[:,3]
+    sigma2 = c3 + (1 / (np.exp(c4 * x[:,1]) - 1))
+    mu = c1 * x[:,2]
+    sigma = (np.power(sigma1, 2) * np.power(sigma2, 2))/(np.power(sigma1, 2) + np.power(sigma2, 2))
+    for i in range(0,8):
+        if np.isnan(sigma[i]): sigma[i] = sigma1[i] ** 2
+    result = (1 / np.sqrt(2 * np.pi * sigma)) * np.exp(-np.power(x[:,0] - mu, 2) / (2 * sigma))
+    return 1 - result
 
 # Problem 1
 def mta_fitting(input_tech:bool, data_file_path = "../2018147558.csv"):
-    """
-    Moving-target acquisition fitting function
-
-    data_file_path := string of path to the target data file.
-    Refer to Homework 1 spec or given sample data for data format.
-
-    input_tech := bool flag to select data of which input technique.
-    If True, use button pressed case.
-    If False, use button released case.
-    """
-    global tcue, tzone, p
+    x = []
+    y = []
     if(input_tech) : onkey = 1
     else : onkey = 0
     data = pd.read_csv(data_file_path)
-    for i in range(1, 2):
+    key = data['key'] == onkey
+    success = data['success'] == 1
+    
+    for i in range(1, 9):
         cond = data['cond'] == i
-        key = data['key'] == onkey 
-        test_data = data[cond & key].set_index('timestamp').reset_index()
-        tcue = test_data['t_cue'].to_numpy()
-        tzone = test_data['t_zone'].to_numpy()
-        p = test_data['p'].to_numpy()
-        y = test_data['success'].to_numpy()
-        x = test_data['timestamp'].to_numpy()
-        popt, _ = scipy.optimize.curve_fit(model, x, y, bounds=([-0.5, 0, 0, 150], [0.5, 0.5, 0.1, 350]))
-        plt.plot(x, y, label="origianl")
-        plt.plot(x, model(x, *popt), label="1")
-        plt.show()
+        y.append(1 - data[cond & key]['success'].mean())
+        x.append(data[cond & key & success].loc[:,['timestamp','t_cue','t_zone','p']].mean().to_numpy())
+    
+    popt, _ = scipy.optimize.curve_fit(model, x, np.array(y), bounds=([-0.5, 0, 0, 150], [0.5, 0.5, 0.1, 350]))
+    print(model(x,*popt))
+    print(y)
+    print(popt)
+    plt.figure(figsize=(600/96, 600/96), dpi=96)
+    plt.plot(y, model(x, *popt), 'ro')
+    plt.plot([0, 0.5, 1], [0, 0.5, 1], label='x=y')
+    if input_tech : plt.savefig('./scatterplot/mta_pressed.png', dpi = 96)
+    else : plt.savefig('./scatterplot/mta_released.png', dpi = 96)
+    
 
-
-    y = data['success']
-
-    # Complete this function ...
-
-    ### The name of variables are free to set
-    ### But the order of return shouldn't be revised.
-    # return c1, c2, c3, c4, R2
-
+def p2model(x, a, b):
+    return a + b * np.log(x[0]/x[1] + 1)
 
 # Problem 2
 def fl_fitting(data_file_path="./dataset/pointing_task.csv"):
-    """
-    Fitts' law fitting function
-
-    It is not necessary to change data_file_path.
-    """
-
+    x = []
+    y = []
+    data = pd.read_csv(data_file_path)
+    cond = data['success'] == 1
+    x.append(data[cond].loc[:,['width', 'distance']].to_numpy())
+    y.append(data[cond])
     # Complete this function ...
 
     ### The name of variables are free to set
