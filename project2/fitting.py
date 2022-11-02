@@ -17,7 +17,7 @@ from drift_diffusion_simul import drift_diffusion_simulation
 ### You can define your own functions or constants here ... if you want.
 
 
-def model(x, c1, c2, c3, c4):
+def p1model(x, c1, c2, c3, c4):
     x = np.array(x) / 1000
     sigma1 = c2 * x[:,3]
     sigma2 = c3 + (1 / (np.exp(c4 * x[:,1]) - 1))
@@ -25,7 +25,8 @@ def model(x, c1, c2, c3, c4):
     sigma = (np.power(sigma1, 2) * np.power(sigma2, 2))/(np.power(sigma1, 2) + np.power(sigma2, 2))
     for i in range(0,8):
         if np.isnan(sigma[i]): sigma[i] = sigma1[i] ** 2
-    result = (1 / np.sqrt(2 * np.pi * sigma)) * np.exp(-np.power(x[:,0] - mu, 2) / (2 * sigma))
+    #result = (1 / np.sqrt(2 * np.pi * sigma)) * np.exp(-np.power(x[:,0] - mu, 2) / (2 * sigma))
+    result = 0.5 * (1 + scipy.special.erf((x[:,0] - mu)/np.sqrt(2*sigma)))
     return 1 - result
 
 # Problem 1
@@ -43,12 +44,12 @@ def mta_fitting(input_tech:bool, data_file_path = "../2018147558.csv"):
         y.append(1 - data[cond & key]['success'].mean())
         x.append(data[cond & key & success].loc[:,['timestamp','t_cue','t_zone','p']].mean().to_numpy())
     
-    popt, _ = scipy.optimize.curve_fit(model, x, np.array(y), bounds=([-0.5, 0, 0, 150], [0.5, 0.5, 0.1, 350]))
-    print(model(x,*popt))
+    popt, _ = scipy.optimize.curve_fit(p1model, x, np.array(y), bounds=([-0.5, 0, 0, 150], [0.5, 0.5, 0.1, 350]))
+    print(p1model(x,*popt))
     print(y)
     print(popt)
     plt.figure(figsize=(600/96, 600/96), dpi=96)
-    plt.plot(y, model(x, *popt), 'ro')
+    plt.plot(y, p1model(x, *popt), 'ro')
     plt.plot([0, 0.5, 1], [0, 0.5, 1], label='x=y')
     if input_tech : plt.savefig('./scatterplot/mta_pressed.png', dpi = 96)
     else : plt.savefig('./scatterplot/mta_released.png', dpi = 96)
@@ -65,7 +66,8 @@ def fl_fitting(data_file_path="./dataset/pointing_task.csv"):
     cond = data['success'] == 1
     x.append(data[cond].loc[:,['width', 'distance']].to_numpy())
     y.append(data[cond])
-    # Complete this function ...
+    
+    
 
     ### The name of variables are free to set
     ### But the order of return shouldn't be revised.
