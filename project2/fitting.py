@@ -41,8 +41,7 @@ def mta_fitting(input_tech: bool, data_file_path="./dataset/mta_sample_data.csv"
     for i in range(1, 9):
         cond = data['cond'] == i
         y.append(1 - data[cond & key]['success'].mean())
-        x.append(data[cond & key & success].loc[:, [
-                 'timestamp', 't_cue', 't_zone', 'p']].mean().to_numpy())
+        x.append(data[cond & key & success].loc[:, ['timestamp', 't_cue', 't_zone', 'p']].mean().to_numpy())
 
     popt, _ = scipy.optimize.curve_fit(p1model, x, np.array(
         y), bounds=([-0.6, 0, 0, 0], [0.6, 0.5, 0.1, 500]))
@@ -74,8 +73,7 @@ def fl_fitting(data_file_path="./dataset/pointing_task.csv"):
     cond = data['success'] == 1
     for i in widths:
         for j in dists:
-            x.append(data[i & j & cond].loc[:, [
-                     'width', 'distance']].mean().to_numpy())
+            x.append(data[i & j & cond].loc[:, ['width', 'distance']].mean().to_numpy())
             y.append(data[i & j & cond]['time'].mean())
     popt, _ = scipy.optimize.curve_fit(p2model, x, np.array(y), p0=[0, 1])
     plt.figure(figsize=(600/96, 600/96), dpi=96)
@@ -88,7 +86,6 @@ def fl_fitting(data_file_path="./dataset/pointing_task.csv"):
 
 
 # Problem 3
-# Choose your answer by setting this variable
 given_instruction_is = 2    # 1 OR 2
 
 
@@ -125,17 +122,18 @@ def dd_fitting(data_file_path="./dataset/choice_reaction.csv"):
     a, mu, Ter = res['x']
     xdata = np.array(drift_diffusion_simulation(a, mu, Ter)).T
     plt.figure(figsize=(600/96, 600/96), dpi=96)
-    plt.hist((data[data[:,1] == 1][:,0], xdata[xdata[:,1] == 1][:,0]), bins=30, histtype='step', density=True)
+    plt.hist((data[data[:, 1] == 1][:, 0], xdata[xdata[:, 1] == 1][:, 0]),
+             bins=30, histtype='step', density=True)
     plt.savefig('./scatterplot/dd_correct.png', dpi=96)
     plt.clf()
-    plt.hist((data[data[:,1] == 0][:,0], xdata[xdata[:,1] == 0][:,0]), bins=30, histtype='step', density=True)
+    plt.hist((data[data[:, 1] == 0][:, 0], xdata[xdata[:, 1] == 0][:, 0]), 
+             bins=30, histtype='step', density=True)
     plt.savefig('./scatterplot/dd_error.png', dpi=96)
 
     return a, mu, Ter, -res['fun']
 
 
 if __name__ == "__main__":
-    # mta_fitting(True)
-    # fl_fitting()
-    # modify()
+    mta_fitting(True)
+    fl_fitting()
     dd_fitting()
