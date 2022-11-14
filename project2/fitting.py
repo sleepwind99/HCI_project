@@ -6,9 +6,6 @@ import pandas as pd
 
 from drift_diffusion_simul import drift_diffusion_simulation
 
-# You can define your own functions or constants here ... if you want.
-
-
 def p1model(x, c1, c2, c3, c4):
     x = np.array(x) / 1000
     sigma1 = c2 * x[:, 3]
@@ -28,8 +25,6 @@ def p1model(x, c1, c2, c3, c4):
 
 
 # Problem 1
-
-
 def mta_fitting(input_tech: bool, data_file_path="./dataset/mta_sample_data.csv"):
     x = []
     y = []
@@ -72,8 +67,6 @@ def p2model(x, a, b):
 
 
 # Problem 2
-
-
 def fl_fitting(data_file_path="./dataset/pointing_task.csv"):
     x = []
     y = []
