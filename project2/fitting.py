@@ -127,16 +127,18 @@ def p4model(x, xdata):
 # Problem 4
 def dd_fitting(data_file_path="./dataset/choice_reaction.csv"):
     data = pd.read_csv(data_file_path).sort_values(by=["reaction_time"]).to_numpy()
-    # use minimize optimizer and method is L-BFGS-B
+
+    # use minimize optimizer and method is Nelder-Mead
     res = scipy.optimize.minimize(
         p4model,
         [0.074, 0.316, 0.283],
         args=(data),
-        method="L-BFGS-B",
+        method="Nelder-Mead",
         bounds=[(0.045, 0.075), (0.25, 0.32), (0.25, 0.35)],
     )
     a, mu, Ter = res["x"]
     xdata = np.array(drift_diffusion_simulation(a, mu, Ter)).T
+
     # histogram of correct reaction
     plt.figure(figsize=(600 / 96, 600 / 96), dpi=96)
     plt.hist(
@@ -149,6 +151,7 @@ def dd_fitting(data_file_path="./dataset/choice_reaction.csv"):
     plt.ylabel("density")
     plt.savefig("./scatterplot/dd_correct.png", dpi=96)
     plt.clf()
+
     # histogram of error reaction
     plt.hist(
         (data[data[:, 1] == 0][:, 0], xdata[xdata[:, 1] == 0][:, 0]),
